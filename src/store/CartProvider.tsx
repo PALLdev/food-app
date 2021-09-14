@@ -25,31 +25,53 @@ const defaultCartState: CartStateTypes = {
 const cartReducer = (state: CartStateTypes, action: CartActionTypes) => {
   switch (action.type) {
     case "ADD_CART_ITEM":
-      //update my cart items
-      const updatedItems = state.items.concat(action.item);
       const updatedTotalAmount =
         state.totalAmount + action.item.price * action.item.amount;
+
+      const existingCartItemIndex = state.items.findIndex(
+        (item) => item.id === action.item.id
+      );
+      // only works if we have that item already
+      const existingCartItem = state.items[existingCartItemIndex];
+
+      let updatedItems: Item[];
+
+      if (existingCartItem) {
+        const updatedItem = {
+          ...existingCartItem,
+          amount: existingCartItem.amount + action.item.amount,
+        };
+        updatedItems = [...state.items];
+        updatedItems[existingCartItemIndex] = updatedItem;
+      } else {
+        updatedItems = state.items.concat(action.item);
+      }
+
       return {
         items: updatedItems,
         totalAmount: updatedTotalAmount,
       };
     case "DELETE_CART_ITEM":
-      // const item = state.items.find((el) => {
-      //   return el.id === action.id;
-      // });
+      const itemIndex = state.items.findIndex((item) => item.id === action.id);
+      const item = state.items[itemIndex];
+      const updatedAmount = state.totalAmount - item.price;
 
-      // if (item!.amount > 1) {
-      //   item!.amount = -1;
-      // } else {
+      let newItemsArray: Item[];
 
-      // }
+      if (item.amount === 1) {
+        newItemsArray = state.items.filter((item) => item.id !== action.id);
+      } else {
+        const updatedItem: Item = {
+          ...item,
+          amount: item.amount - 1,
+        };
+        newItemsArray = [...state.items];
+        newItemsArray[itemIndex] = updatedItem;
+      }
 
-      const newItemsArray = state.items.filter((el) => {
-        return el.id !== action.id;
-      });
       return {
         items: newItemsArray,
-        totalAmount: 0,
+        totalAmount: updatedAmount,
       };
     default:
       break;
